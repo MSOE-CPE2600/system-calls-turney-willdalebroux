@@ -9,14 +9,26 @@
 #include <errno.h>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
+#define NS_PER_SEC 1000000000ULL //nanosecond conversion; ULL to avoid overflow
 
 
 int main(int argc, char* arg[])
 {
-    // struct timespec ts;
-    // clock_gettime(CLOCK_REALTIME, &ts);
-
-    // printf("seconds: %ld\n", ts.tv_sec);
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    /*
+     *ts.tv_sec: seconds since unix epoch(12/31/1969 6:00pm CST)(1/1/1970 12:00am GMT)
+     *ts.tv_nsec: how far through a nanosecond we are at any given moment
+     *current time=ts.tv_sec * 1000000000ULL(unsigned long long) + ts.tv_nsec
+    */
+    printf("time in nanoseconds: %llu\n", (unsigned long long)((ts.tv_sec * NS_PER_SEC) + ts.tv_nsec)); 
+    
+    //print current time in human readable format
+    time_t now = time(NULL); // hold seconds since unix epoch
+    struct tm *current_time; // structure to hold seconds, minutes, hours etc.
+    time(&now); // pass in address of now to get current time
+    current_time = localtime(&now); //convert to local time
+    printf("Current time: %s\n", asctime(current_time)); //format local time to string
 
 
     char hostname[256]; // declare array with reasonable size for host name
