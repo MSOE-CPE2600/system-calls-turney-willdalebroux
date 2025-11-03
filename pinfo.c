@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
     
     printf("Scheduling method:\n");
     //print policy as string
+    //ifdef guards for BATCH, IDLE and DEADLINE since they're linux specific
     switch(policy)
     {
         case SCHED_OTHER:
@@ -66,15 +67,21 @@ int main(int argc, char* argv[])
         case SCHED_RR:
             printf("SCHED_RR\n"); // Round robin (realtime)
             break;
+    #ifdef SCHED_BATCH 
         case SCHED_BATCH:
             printf("SCHED_BATCH\n");// nice
             break;
+    #endif
+    #ifdef SCHED_IDLE
         case SCHED_IDLE:
             printf("SCHED_IDLE\n"); //nice
             break;
+    #endif
+    #ifdef SCHED_DEADLINE
         case SCHED_DEADLINE:
             printf("SCHED_DEADLINE\n"); // N/A
             break;
+    #endif
         default:
             printf("Unknown %d\n", policy);
             break;
@@ -86,7 +93,17 @@ int main(int argc, char* argv[])
     if(policy == SCHED_FIFO || policy == SCHED_RR) // real time 
     {
         struct sched_param sp; // declare struct to store sched_priority
-        sched_getparam(pid, &sp); // pass in current pid and address of struct to store
+        if(sched_getparam(pid, &sp) == -1) // pass in current pid and address of struct to store
+        {
+            //error handling
+            if(errno == ESRCH)
+            {
+                fprintf(stderr, "No such process: %d\n", pid);
+                return EXIT_FAILURE;
+            }
+            perror("sched_getparam");
+            return EXIT_FAILURE;
+        }
         printf("Priority (realtime): %d\n", sp.sched_priority);
     }
     else if(policy == SCHED_DEADLINE)
@@ -97,6 +114,16 @@ int main(int argc, char* argv[])
     {
         errno = 0;
         int nice_val = getpriority(PRIO_PROCESS, pid); // get nice value of pid
+        if(nice_val == -1 && errno != 0)
+        {
+            if(errno == ESRCH)
+            {
+                fprintf(stderr, "No such process %d\n", pid);
+                return EXIT_FAILURE;
+            }
+            perror("getpriority");
+            return EXIT_FAILURE;
+        }
         printf("Priority (nice): %d\n", nice_val);
     }
     
