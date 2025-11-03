@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     if(argc >= 2)
     {
         struct stat sb; // declare struct to store file info in
-        int fd = open(argv[1], O_RDONLY | O_DIRECTORY);
+        int fd = open(argv[1], O_RDONLY);
         if(fd == -1)
         {
             perror("open");
@@ -74,6 +74,19 @@ int main(int argc, char* argv[])
                 printf("File type is: socket\n");
                 break;
         }
+        //print permissions
+        printf("File permissions:\n");
+        printf((S_ISDIR(sb.st_mode)) ? "d" : "-"); //print d if directory, else -
+        printf((sb.st_mode & S_IRUSR) ? "r" : "-"); //print r if usr has read perm, else -
+        printf((sb.st_mode & S_IWUSR) ? "w" : "-"); //print w if usr has write perm, else -
+        printf((sb.st_mode & S_IXUSR) ? "x" : "-"); //print x if usr has exec perm, else -
+        printf((sb.st_mode & S_IRGRP) ? "r" : "-"); //print r if group has read perm, else -
+        printf((sb.st_mode & S_IWGRP) ? "w" : "-"); //print w if group has write perm, else -
+        printf((sb.st_mode & S_IXGRP) ? "x" : "-"); //print x if group has exec perm, else - 
+        printf((sb.st_mode & S_IROTH) ? "r" : "-"); //print r if others have read perm, else -
+        printf((sb.st_mode & S_IWOTH) ? "w" : "-"); //print w if others have write perm, else - 
+        printf((sb.st_mode & S_IXOTH) ? "x" : "-"); //print x if others have exec perm, else -
+        printf("\n");
         close(fd);
     }
 
